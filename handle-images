@@ -16,7 +16,7 @@ class HandlerImage(object):
         # cv2.imshow('res',res)
         cv2.waitKey(0)
         cv2.imwrite(path, res)
-        cv2.destoryAllWindows()
+        cv2.destroyAllWindows()
 
     def get_md5(self, path):
         '''
