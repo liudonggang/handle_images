@@ -1,0 +1,54 @@
+# _*_ coding:utf-8_*_
+import glob, hashlib, os, cv2
+
+
+class HandlerImage(object):
+    def __int__(self):
+        pass
+
+    def image_resize(self, path):
+        '''
+        Image processing is fixed size.
+        :param path: Picture  path
+        :return: None
+        '''
+        res = cv2.resize(cv2.imread(path), (32, 32), interpolation=cv2.INTER_CUBIC)
+        # cv2.imshow('res',res)
+        cv2.waitKey(0)
+        cv2.imwrite(path, res)
+        cv2.destoryAllWindows()
+
+    def get_md5(self, path):
+        '''
+        :param path: Picture path
+        :return: After MD5 encryption, the hash value is returned.
+        '''
+        self.image_resize(path)
+        with open(path, 'rb') as f:
+            md5obj = hashlib.md5()
+            md5obj.update(f.read())
+            hash = md5obj.hexdigest()
+            return hash
+
+    def image_rename(self, hash, path):
+        '''
+        Rename pictures.
+        :param hash:The new name of the picture that has been encrypted through MD5.
+        :param path:Picture path
+        :return: None
+        '''
+        new_name = hash + '.jpg'
+        file_start = path.split('.')[0]
+        file_path = '\\'.join(file_start.split('\\')[0:-1])
+        # print(file_path)
+        try:
+            os.rename(os.path.join(path), os.path.join(file_path, new_name))
+        except Exception as e:
+            print(e)
+
+
+if __name__ == '__main__':
+    hand = HandlerImage()
+    image_list = glob.glob(r'**/*.jpg', recursive=True)
+    for path in image_list:
+        hand.image_rename(hand.get_md5(path), path=path)
