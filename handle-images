@@ -1,24 +1,25 @@
-# _*_ coding:utf-8_*_
 import glob, hashlib, os, cv2,json
 
 
 class HandlerImage(object):
+
     def __init__(self,json_list):
         self.json_list = json_list
 
     def get_md5(self, path):
+        # 对文件内容进行md5加密输出
         with open(path, 'rb') as f:
             md5obj = hashlib.md5()
             md5obj.update(f.read())
             hash = md5obj.hexdigest()
             return hash
 
-    def new_image_path(self, path):
+    def new_image_path(self, path, old_file_name):
         l = []
-        a = os.path.dirname(path).split('/')[0]
-        a += 'MapSmall'
-        l.append(a)
-        l.append('/'.join(os.path.dirname(path).split('/')[1:]))
+        # 新的问价夹的全路径
+        new_path_start = '/'.join(path.replace(old_file_name,old_file_name+'MapSmall').split('.')[0:-1][0].split('/')[0:-1])
+        l.append(new_path_start)
+        # 新的图片的名称
         new_name = os.path.basename(path).split('.')[0] + '|Map|' + self.get_md5(path) + '.jpg'
         l.append(new_name)
         if '' in l:
@@ -26,13 +27,14 @@ class HandlerImage(object):
         new_path = '/'.join(l)
         return new_path
 
-
     def json_content(self,path,new_path):
+        # 写入json文件的内容
         json_dict ={}
         json_dict[path] = new_path
         self.json_list.append(json_dict)
 
     def create_json_files(self,new_path):
+        # 切割并获取到json文件的路径
         a = []
         json_path = '/'.join(new_path.split('.')[0].split('/')[0:-1])
         file = new_path.split('.')[0].split('/')[:-1][-1]
@@ -41,56 +43,55 @@ class HandlerImage(object):
         json_path = '/'.join(a) + '.json'
         return json_path
 
-
     def judge_image_new_path(self,new_path):
+        # 文件夹不存在时，进行创建工作
         new_folder = '/'.join(new_path.split('.')[0].split('/')[0:-1])
         if not os.path.exists(new_folder):
             try:
-                os.mkdir(new_folder)
+                os.makedirs(new_folder)
             except Exception as e:
-                # print(e)
-                pass
-
+                print(e)
 
     def image_resize(self, path,new_path):
+        # 对image进行resize工作
         res = cv2.resize(cv2.imread(path), (320, 240), interpolation=cv2.INTER_CUBIC)
         cv2.waitKey(0)
         cv2.imwrite(new_path, res)
         cv2.destroyAllWindows()
 
-
     def write_json(self,content,json_path):
+        # 写入json内容
         try:
             with open(json_path, 'w+',encoding='utf-8') as f:
                 json.dump(content,f)
         except Exception as e:
-            # print(e)
             pass
 
-
 def main(image_path_list,hand):
+    old_file_name = input('请输入原有的文件夹名称(注：只是即将操作的一个问价夹，并不是文件的全路径！！！)：')
     for path in image_path_list:
-        new_path = hand.new_image_path(path)
+        # print(path)
+        new_path = hand.new_image_path(path,old_file_name)
         hand.judge_image_new_path(new_path)
         hand.image_resize(path,new_path)
         json_path = hand.create_json_files(new_path)
         hand.json_content(path, new_path)
+        # json文件不存在时创建，存在时进行写入工作
+        print('写入图片：',path)
         try:
             if not os.path.exists(json_path):
                 hand.write_json(hand.json_list,json_path)
-                # print('创建时存入：',hand.json_list)
-                # print('----------------------')
+                print('文件创建时存入：')
         except Exception as e:
-            # print(e)
             pass
+
         finally:
             hand.write_json(hand.json_list,json_path)
-            # print('存在时存入：', hand.json_list)
-            # print('----------------------')
+    print('操作完成！')
 
 
 if __name__ == '__main__':
-    image_path_list = glob.glob(r'images/**/*.jpg', recursive=True)
+    # 使用Python的glob模块进行文件的匹配，具体文档请参考官文文档：https://docs.python.org/3/library/glob.html?highlight=glob#glob.glob 
+    image_path_list = glob.glob(r'/Users/liudonggang/PycharmProjects/work/handlerimages/**/*.jpg', recursive=True)
     hand = HandlerImage(json_list = [])
     main(image_path_list,hand=hand)
-
