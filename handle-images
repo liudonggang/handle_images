@@ -2,7 +2,9 @@ import glob, hashlib, os, cv2,json
 
 
 class HandlerImage(object):
-
+    '''
+    将图片的文件夹进行复制，并将大图修改成大小固定的尺寸的图，并进行md5重命名，并形成对应的json文件，为以后的标注工作作铺垫。
+    '''
     def __init__(self,json_list):
         self.json_list = json_list
 
@@ -16,7 +18,7 @@ class HandlerImage(object):
 
     def new_image_path(self, path, old_file_name):
         l = []
-        # 新的问价夹的全路径
+        # 新的文件夹的全路径
         new_path_start = '/'.join(path.replace(old_file_name,old_file_name+'MapSmall').split('.')[0:-1][0].split('/')[0:-1])
         l.append(new_path_start)
         # 新的图片的名称
@@ -32,6 +34,7 @@ class HandlerImage(object):
         json_dict ={}
         json_dict[path] = new_path
         self.json_list.append(json_dict)
+        return self.json_list
 
     def create_json_files(self,new_path):
         # 切割并获取到json文件的路径
@@ -44,7 +47,7 @@ class HandlerImage(object):
         return json_path
 
     def judge_image_new_path(self,new_path):
-        # 文件夹不存在时，进行创建工作
+        # 文件夹不存在时，进行创建
         new_folder = '/'.join(new_path.split('.')[0].split('/')[0:-1])
         if not os.path.exists(new_folder):
             try:
@@ -53,7 +56,7 @@ class HandlerImage(object):
                 print(e)
 
     def image_resize(self, path,new_path):
-        # 对image进行resize工作
+        # 对image进行resize
         res = cv2.resize(cv2.imread(path), (320, 240), interpolation=cv2.INTER_CUBIC)
         cv2.waitKey(0)
         cv2.imwrite(new_path, res)
@@ -75,23 +78,25 @@ def main(image_path_list,hand):
         hand.judge_image_new_path(new_path)
         hand.image_resize(path,new_path)
         json_path = hand.create_json_files(new_path)
-        hand.json_content(path, new_path)
-        # json文件不存在时创建，存在时进行写入工作
-        print('写入图片：',path)
+        json_lists = hand.json_content(path, new_path)
+        # json文件不存在时创建，存在时进行写入
+        # print('文件创建时写入：',new_path)
         try:
             if not os.path.exists(json_path):
                 hand.write_json(hand.json_list,json_path)
-                print('文件创建时存入：')
+                print('文件创建时存入：',new_path)
         except Exception as e:
             pass
 
         finally:
             hand.write_json(hand.json_list,json_path)
+            print('存入：',new_path)
     print('操作完成！')
+    # 统计图片数量
+    print(len(image_path_list))
 
 
 if __name__ == '__main__':
-    # 使用Python的glob模块进行文件的匹配，具体文档请参考官文文档：https://docs.python.org/3/library/glob.html?highlight=glob#glob.glob 
     image_path_list = glob.glob(r'/Users/liudonggang/PycharmProjects/work/handlerimages/**/*.jpg', recursive=True)
     hand = HandlerImage(json_list = [])
     main(image_path_list,hand=hand)
