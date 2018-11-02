@@ -5,8 +5,8 @@ class HandlerImage(object):
     '''
     将图片的文件夹进行复制，并将大图修改成大小固定的尺寸的图，并进行md5重命名，并形成对应的json文件，为以后的标注工作作铺垫。
     '''
-    def __init__(self,json_list):
-        self.json_list = json_list
+    def __init__(self,dicts):
+        self.dicts = dicts
 
     def get_md5(self, path):
         # 对文件内容进行md5加密输出
@@ -33,10 +33,9 @@ class HandlerImage(object):
         # 写入json文件的内容
         json_dict ={}
         json_dict[path] = new_path
-        self.json_list.append(json_dict)
-        return self.json_list
+        return json_dict
 
-    def create_json_files(self,new_path):
+    def get_json_path(self,new_path):
         # 切割并获取到json文件的路径
         a = []
         json_path = '/'.join(new_path.split('.')[0].split('/')[0:-1])
@@ -62,13 +61,30 @@ class HandlerImage(object):
         cv2.imwrite(new_path, res)
         cv2.destroyAllWindows()
 
-    def write_json(self,content,json_path):
-        # 写入json内容
+
+    def write_json(self,path,new_path):
+        json_path = self.get_json_path(new_path)
+        json_dict = self.json_content(path,new_path)
+        self.dicts['MapPath'] = json_dict
         try:
-            with open(json_path, 'w+',encoding='utf-8') as f:
-                json.dump(content,f)
+            with open(json_path,'a',encoding='utf-8') as f:
+                if not os.path.exists(json_path):
+                    f.write('{')
+                    json.dump(self.dicts,f)
+                    f.write('\n')
+                    print('创建时插入:', json_dict)
+                else:
+                    json.dump(self.dicts, f)
+                    f.write('\n')
+                    print('存在时插入：', json_dict)
+                f.write('}')
         except Exception as e:
-            pass
+            print(e)
+        finally:
+            self.dicts = {}
+        print('---'*100)
+
+
 
 def main(image_path_list,hand):
     old_file_name = input('请输入原有的文件夹名称(注：只是即将操作的一个问价夹，并不是文件的全路径！！！)：')
@@ -77,20 +93,7 @@ def main(image_path_list,hand):
         new_path = hand.new_image_path(path,old_file_name)
         hand.judge_image_new_path(new_path)
         hand.image_resize(path,new_path)
-        json_path = hand.create_json_files(new_path)
-        json_lists = hand.json_content(path, new_path)
-        # json文件不存在时创建，存在时进行写入
-        # print('文件创建时写入：',new_path)
-        try:
-            if not os.path.exists(json_path):
-                hand.write_json(hand.json_list,json_path)
-                print('文件创建时存入：',new_path)
-        except Exception as e:
-            pass
-
-        finally:
-            hand.write_json(hand.json_list,json_path)
-            print('存入：',new_path)
+        hand.write_json(path,new_path)
     print('操作完成！')
     # 统计图片数量
     print(len(image_path_list))
@@ -98,5 +101,5 @@ def main(image_path_list,hand):
 
 if __name__ == '__main__':
     image_path_list = glob.glob(r'/Users/liudonggang/PycharmProjects/work/handlerimages/**/*.jpg', recursive=True)
-    hand = HandlerImage(json_list = [])
+    hand = HandlerImage(dicts={})
     main(image_path_list,hand=hand)
