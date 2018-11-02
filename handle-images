@@ -65,7 +65,7 @@ class HandlerImage(object):
     def write_json(self,path,new_path):
         json_path = self.get_json_path(new_path)
         json_dict = self.json_content(path,new_path)
-        self.dicts['MapPath'] = json_dict
+        self.dicts = json_dict
         try:
             with open(json_path,'a',encoding='utf-8') as f:
                 if not os.path.exists(json_path):
