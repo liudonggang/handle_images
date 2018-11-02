@@ -1,0 +1,17 @@
+import os,glob
+
+def main(path_list):
+    for path in path_list:
+        old_name = path.split('.')[0].split('/')[-1].split('_')[-1]
+        new_name = os.path.dirname(path)+'/'+old_name+'.jpg'
+        os.renames(path,new_name)
+        print('重命名：',path)
+    print('完成')
+
+
+
+
+if __name__ == '__main__':
+    # path是你想修改png文件格式的图片文件的绝对路径
+    path_list = glob.glob(r'/{path}/*.png')
+    main(path_list)
