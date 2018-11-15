@@ -1,17 +1,20 @@
-import os,glob
+import os,glob,time
+from multiprocessing import Pool
 
-def main(path_list):
-    for path in path_list:
-        old_name = path.split('.')[0].split('/')[-1].split('_')[-1]
-        new_name = os.path.dirname(path)+'/'+old_name+'.jpg'
-        os.renames(path,new_name)
-        print('重命名：',path)
-    print('完成')
-
+def func(path):
+    old_name = path.split('.')[0].split('/')[-1].split('_')[-1]
+    new_name = os.path.dirname(path)+'/'+old_name+'.jpg'
+    os.renames(path,new_name)
 
 
 
 if __name__ == '__main__':
-    # path是你想修改png文件格式的图片文件的绝对路径
-    path_list = glob.glob(r'/{path}/*.png')
-    main(path_list)
+    path_list = glob.glob(r'/Users/liudonggang/Desktop/INU_20181101_base/*.png')
+    p = Pool(16)
+    t1 = time.time()
+    for path in path_list:
+        p.apply_async(func, args=(path,))
+    p.close()
+    p.join()
+    t2 = time.time()
+    print('全部完成，总耗时：', t2 - t1)
