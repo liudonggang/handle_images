@@ -1,18 +1,25 @@
-import glob,json,os
-def main(json_file_list):
-
-    for json_file in json_file_list:
-        json_list = []
-        with open(json_file,'r',encoding='utf-8') as f:
-            json_list.append(f.read())
-            os.remove(json_file)
-        with open(json_file, 'a', encoding='utf-8') as f:
-            f.write('')
-            json.dump(json_list,f)
+import glob,json,os,time
+from multiprocessing import Pool
 
 
+def func(json_file):
+    json_list = []
+    with open(json_file,'r',encoding='utf-8') as f:
+        json_list.append(f.read())
+        os.remove(json_file)
+    with open(json_file, 'a', encoding='utf-8') as f:
+        f.write('')
+        json.dump(json_list,f)
+    print('完成：',json_file)
 
 
 if __name__ == '__main__':
     json_file_list = glob.glob(r'/Users/liudonggang/PycharmProjects/work/handlerimagesMapSmall/**/*.json',recursive=True)
-    main(json_file_list)
+    p = Pool(16)
+    t1 = time.time()
+    for json_file in json_file_list:
+        p.apply_async(func,args=(json_file,))
+    p.close()
+    p.join()
+    t2 = time.time()
+    print('耗时：',t2-t1)
