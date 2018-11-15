@@ -1,5 +1,5 @@
-import glob, hashlib, os, cv2,json
-
+import glob, hashlib, os, cv2, json,datetime,time
+from multiprocessing import Pool
 
 class HandlerImage(object):
     '''
@@ -10,11 +10,14 @@ class HandlerImage(object):
 
     def get_md5(self, path):
         # 对文件内容进行md5加密输出
-        with open(path, 'rb') as f:
-            md5obj = hashlib.md5()
-            md5obj.update(f.read())
-            hash = md5obj.hexdigest()
-            return hash
+        try:
+            with open(path, 'rb') as f:
+                md5obj = hashlib.md5()
+                md5obj.update(f.read())
+                hash = md5obj.hexdigest()
+                return hash
+        except Exception as e:
+            pass
 
     def new_image_path(self, path, old_file_name):
         l = []
@@ -56,50 +59,59 @@ class HandlerImage(object):
 
     def image_resize(self, path,new_path):
         # 对image进行resize
-        res = cv2.resize(cv2.imread(path), (320, 240), interpolation=cv2.INTER_CUBIC)
-        cv2.waitKey(0)
-        cv2.imwrite(new_path, res)
-        cv2.destroyAllWindows()
+        try:
+            res = cv2.resize(cv2.imread(path), (320, 240), interpolation=cv2.INTER_CUBIC)
+            cv2.waitKey(0)
+            cv2.imwrite(new_path, res)
+            cv2.destroyAllWindows()
+        except Exception as e:
+            pass
 
 
     def write_json(self,path,new_path):
+        # 写入dict，由于文件分为创建和存在，他们写入的内容并不相同
         json_path = self.get_json_path(new_path)
         json_dict = self.json_content(path,new_path)
         self.dicts = json_dict
         try:
             with open(json_path,'a',encoding='utf-8') as f:
                 if not os.path.exists(json_path):
-                    f.write('{')
                     json.dump(self.dicts,f)
+                    f.write(',')
                     f.write('\n')
                     print('创建时插入:', json_dict)
                 else:
                     json.dump(self.dicts, f)
+                    f.write(',')
                     f.write('\n')
                     print('存在时插入：', json_dict)
-                f.write('}')
+
         except Exception as e:
             print(e)
         finally:
             self.dicts = {}
-        print('---'*100)
 
 
+def func(path,hand,old_file_name):
+    new_path = hand.new_image_path(path,old_file_name)
+    hand.judge_image_new_path(new_path)
+    hand.image_resize(path,new_path)
+    hand.write_json(path,new_path)
 
-def main(image_path_list,hand):
-    old_file_name = input('请输入原有的文件夹名称(注：只是即将操作的一个问价夹，并不是文件的全路径！！！)：')
-    for path in image_path_list:
-        # print(path)
-        new_path = hand.new_image_path(path,old_file_name)
-        hand.judge_image_new_path(new_path)
-        hand.image_resize(path,new_path)
-        hand.write_json(path,new_path)
-    print('操作完成！')
-    # 统计图片数量
-    print(len(image_path_list))
 
 
 if __name__ == '__main__':
     image_path_list = glob.glob(r'/Users/liudonggang/PycharmProjects/work/handlerimages/**/*.jpg', recursive=True)
+    old_file_name = input('请输入原有的文件夹名称(注：只是即将操作的一个问价夹，并不是文件的全路径！！！)：')
     hand = HandlerImage(dicts={})
-    main(image_path_list,hand=hand)
+    p = Pool()
+    t1 = time.time()
+    for path in image_path_list:
+        p.apply_async(func, args=(path,hand,old_file_name))
+    p.close()
+    p.join()
+    t2 = time.time()
+    print('操作完成！')
+    print('耗时：',t2-t1)
+    # 统计图片数量
+    print(len(image_path_list))
