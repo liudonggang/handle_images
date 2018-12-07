@@ -1,0 +1,38 @@
+#codeing=utf-8
+import argparse
+import os
+import logging
+
+def create_logfile(log_name):
+    logging.basicConfig(filename='{}.log'.format(log_name),filemode='w',
+                        level=logging.ERROR                        )
+    global logger
+    logger = logging.getLogger(name=__name__)
+
+
+def log_error(msg):
+    logging.error(msg)
+
+
+def func(src_path):
+    print(src_path)
+
+
+def main(src_path):
+    func(src_path)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('src_path',type=str)
+    parser.add_argument('log_name',type=str)
+    args = parser.parse_args()
+    src_path = args.src_path
+    log_name = args.log_name
+    # 创建log日志文件
+    create_logfile(log_name)
+
+    if not os.path.exists(src_path):
+        logging.error('this {} is not exists,please check it! \n'.format(src_path))
+    else:
+        main(src_path)
