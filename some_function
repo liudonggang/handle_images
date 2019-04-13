@@ -1,0 +1,38 @@
+# 该函数接收一个大于1的整数n，输出小于n的全部素数
+def prime_number(n):
+    res = []
+    i = 2
+    for i in range(2,n+1):
+        for j in range(2,i):
+            if i%j == 0:
+                break
+        else:
+            res.append(i)
+    return res
+   
+# 线程的计数1器
+def synchronized(func):
+    import threading
+    func.__lock__ = threading.Lock()
+    def lock_func(*args,**kwargs):
+        with func.__lock__:
+            return func(*args,**kwargs)
+    return lock_func()
+def generate_count(func):
+    count = [0]
+    def add_one():
+        count[0] += 1
+        print(count[0])
+        return count[0]
+    return add_one   
+
+# 统计字符串出现的次数并返回次数前三的函数
+def count_str(st):
+    res = {}
+    for i in aaa:
+        if i not in res:
+            res[i] = 1
+        else:
+            res[i] += 1
+    print(res)
+    print(sorted(res.items(),key=lambda x:x[1],reverse=True)[:3])
