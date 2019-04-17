@@ -11,6 +11,17 @@ def create_logfile(log_name):
 def log_error(msg):
     logging.error(msg)
 
+def untar_file(purpose_path,src_path):
+    if not os.path.exists(purpose_path):
+        os.makedirs(purpose_path)
+    if os.path.isfile(src_path):
+        if src_path.endswith('zip'):
+            try:
+                os.system('tar -zxvf {} -C {}'.format(src_path,purpose_path))
+            except Exception as e:
+                print(e)
+    else:
+        print('this file not !')
 
 def main(src_path):
     import os
