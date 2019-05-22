@@ -1,0 +1,27 @@
+import os,glob,shutil
+from multiprocessing import Pool
+
+def move_rename(item,new_path):
+    if os.path.isfile(item):
+        name = ''
+        for i in item.split('\\')[5:-2]:
+            name += i
+            name += '_'
+        name += item.split('\\')[-1]
+        shutil.copy(item, os.path.join(new_path, name))
+        print(os.path.join(new_path, name))
+        
+def main():
+    path = r'C:\Users\huang\Desktop\annotation_20190510_test\**\*.xml'
+    new_path = r'C:\Users\huang\Desktop\annotation_20190510_test'
+    if not os.path.isdir(new_path):
+        os.makedirs(new_path)
+    p = Pool(4)
+    for item in glob.glob(path,recursive=True):
+        p.apply_async(move_rename, args=(item, new_path))
+    p.close()
+    p.join()
+    print('ok！')
+
+if __name__ == '__main__':
+    main()
